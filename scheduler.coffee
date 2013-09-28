@@ -18,6 +18,13 @@ routes = [
   '51aToOakland'
 ]
 
+nightWeekendRoutes = [
+  'Fruitvale'
+  '12th St.'
+  '51aToBart'
+  '51aToOakland'
+]
+
 
 # output pre-text to display
 output.printString ' -- Getting first schedule -- ', () ->
@@ -26,9 +33,17 @@ setInterval ( ->
   d = new Date()
   commuteTime = d.getHours() is 7 or (d.getHours() is 8 and d.getMinutes() < 30)
   sleepTime = 1 <= d.getHours() <= 5
+  nightWeekend = (d.getDay() is 6) or (d.getDay() is 0) or d.getHours() > 18
 
   if sleepTime
     output.printString ["It's late... ", 'Go back to sleep'], () ->
+
+  else if nightWeekend
+    getArrivalEstimate nightWeekendRoutes, interval_count, (estimate) ->
+      # console.log ' * ', estimate
+      output.printString estimate, () ->
+    if interval_count > (nightWeekendRoutes.length - 2) then interval_count = 0
+    else ++interval_count
 
   else if commuteTime
     getCommuteEstimate (estimate) -> 
@@ -36,7 +51,7 @@ setInterval ( ->
       output.printString estimate, () ->
 
   else
-    getArrivalEstimate interval_count, (estimate) ->
+    getArrivalEstimate routes, interval_count, (estimate) ->
       # console.log ' * ', estimate
       output.printString estimate, () ->
     if interval_count > (routes.length - 2) then interval_count = 0 
@@ -46,28 +61,28 @@ setInterval ( ->
 
 
 
-getArrivalEstimate = (order, done) ->
-  if estimates[routes[order]]
+getArrivalEstimate = (routeArray, order, done) ->
+  if estimates[routeArray[order]]
     console.log 'saving an api call'
-    skippedApiCall = estimates[routes[order]]
-    estimates[routes[order]] = null
+    skippedApiCall = estimates[routeArray[order]]
+    estimates[routeArray[order]] = null
     done skippedApiCall
   else if order < 2
-    bart.getCityTrains routes[order], (error, info) ->
+    bart.getCityTrains routeArray[order], (error, info) ->
       if error
         done error.message
       else if info.error
         done [info.station, info.error]
       else
-        line1 = routes[order] + ' BART'
+        line1 = routeArray[order] + ' BART'
         times = (estObj.est for estObj in info.estimates)
         flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
         sortedTimes = flattenedTimes.sort (a, b) -> a - b
         line2 = _.map sortedTimes, (time) -> " #{time}min"
-        estimates[routes[order]] = [line1, line2]
+        estimates[routeArray[order]] = [line1, line2]
         done [line1, line2]
   else
-    nextBus.getRouteInfo routes[order], (error, info) ->
+    nextBus.getRouteInfo routeArray[order], (error, info) ->
       if error
         done error.message
       else if info.error
@@ -75,7 +90,7 @@ getArrivalEstimate = (order, done) ->
       else
         line1 = info.route + ": " + info.direction
         line2 = _.map info.estimates, (est) -> " #{est}min"
-        estimates[routes[order]] = [line1, line2]
+        estimates[routeArray[order]] = [line1, line2]
         done [line1, line2]
 
 

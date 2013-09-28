@@ -18,17 +18,15 @@ setInterval ( ->
   if sleepTime
     output.printString ["It's late... ", 'Go back to sleep'], () ->
   else if commuteTime
-    getCommuteEstimate (error, estimate) -> 
+    getCommuteEstimate (estimate) -> 
       #console.log estimate
       output.printString estimate, () ->
   else
-    getArrivalEstimate interval_count, (error, estimate) ->
-      if error then console.log '   --- error', error 
-      else 
-        console.log ' * ', estimate
-        output.printString estimate, () ->
-      if interval_count > (routes.length - 2) then interval_count = 0 
-      else ++interval_count
+    getArrivalEstimate interval_count, (estimate) ->
+      # console.log ' * ', estimate
+      output.printString estimate, () ->
+    if interval_count > (routes.length - 2) then interval_count = 0 
+    else ++interval_count
 ), refreshInterval
 
 
@@ -46,23 +44,27 @@ routes = [
 getArrivalEstimate = (order, done) ->
   if order < 2 
     bart.getCityTrains routes[order], (error, info) ->
-      if info.error
-        done null, [info.station, info.error]
+      if error
+        done error.message
+      else if info.error
+        done [info.station, info.error]
       else
         line1 = routes[order] + ' BART'
         times = (estObj.est for estObj in info.estimates)
         flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
         sortedTimes = flattenedTimes.sort (a, b) -> a - b
         line2 = _.map sortedTimes, (time) -> " #{time}min"
-        done null, [line1, line2]
+        done [line1, line2]
   else
     nextBus.getRouteInfo routes[order], (error, info) ->
-      if info.error
-        done null, ["#{info.route}: #{info.stop} ", info.error]
+      if error
+        done error.message
+      else if info.error
+        done ["#{info.route}: #{info.stop} ", info.error]
       else
         line1 = info.route + ": " + info.direction
         line2 = _.map info.estimates, (est) -> " #{est}min"
-        done null, [line1, line2]
+        done [line1, line2]
 
 
 getCommuteEstimate = (done) ->
@@ -80,7 +82,7 @@ getCommuteEstimate = (done) ->
       oInfo = 'O: ' + results.acOInfo.estimates
     if results.acWInfo.estimates
       wInfo = 'W: ' + results.acWInfo.estimates
-    done null, [oInfo, wInfo]
+    done [oInfo, wInfo]
 
 
 

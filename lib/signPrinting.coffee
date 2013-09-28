@@ -27,7 +27,7 @@ module.exports._renderText = _renderText = (textArray, done) ->
 	line = textArray[0]
 	line_pics =  _.map textArray, (line) ->
 		totalLineSize = 96
-		str = line.toString()
+		str = line.toString().replace /^\s+|\s+$/g, ""
 		line_width = 0
 		bytes = []
 		i = 0

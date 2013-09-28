@@ -28,7 +28,7 @@ module.exports = class Bus
 			busInfo.route = info.body.predictions[0].$.routeTitle
 			busInfo.stop = info.body.predictions[0].$.stopTitle
 			if info.body.predictions[0].direction
-				busInfo.direction = info.body.predictions[0].direction[0].$.title
+				busInfo.direction = info.body.predictions[0].direction[0].$.title.replace /BART/, ""
 				estimates = _.map info.body.predictions[0].direction[0].prediction, (est) -> est.$.minutes
 				busInfo.estimates = estimates
 				done null, busInfo

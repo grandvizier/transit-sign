@@ -7,29 +7,7 @@ output = require './lib/signPrinting'
 refreshInterval = 10 * 1000
 interval_count = 0
 
-# output pre-text to display
-output.printString ' -- Getting first schedule -- ', () ->
-
-setInterval ( ->
-  d = new Date()
-  commuteTime = d.getHours() is 7 or (d.getHours() is 8 and d.getMinutes() < 30)
-  sleepTime = 1 <= d.getHours() <= 5
-
-  if sleepTime
-    output.printString ["It's late... ", 'Go back to sleep'], () ->
-  else if commuteTime
-    getCommuteEstimate (estimate) -> 
-      #console.log estimate
-      output.printString estimate, () ->
-  else
-    getArrivalEstimate interval_count, (estimate) ->
-      # console.log ' * ', estimate
-      output.printString estimate, () ->
-    if interval_count > (routes.length - 2) then interval_count = 0 
-    else ++interval_count
-), refreshInterval
-
-
+estimates = []
 
 routes = [
   'Fruitvale'
@@ -41,8 +19,40 @@ routes = [
 ]
 
 
+# output pre-text to display
+output.printString ' -- Getting first schedule -- ', () ->
+
+setInterval ( ->
+  d = new Date()
+  commuteTime = d.getHours() is 7 or (d.getHours() is 8 and d.getMinutes() < 30)
+  sleepTime = 1 <= d.getHours() <= 5
+
+  if sleepTime
+    output.printString ["It's late... ", 'Go back to sleep'], () ->
+
+  else if commuteTime
+    getCommuteEstimate (estimate) -> 
+      #console.log estimate
+      output.printString estimate, () ->
+
+  else
+    getArrivalEstimate interval_count, (estimate) ->
+      # console.log ' * ', estimate
+      output.printString estimate, () ->
+    if interval_count > (routes.length - 2) then interval_count = 0 
+    else ++interval_count
+
+), refreshInterval
+
+
+
 getArrivalEstimate = (order, done) ->
-  if order < 2 
+  if estimates[routes[order]]
+    console.log 'saving an api call'
+    skippedApiCall = estimates[routes[order]]
+    estimates[routes[order]] = null
+    done skippedApiCall
+  else if order < 2
     bart.getCityTrains routes[order], (error, info) ->
       if error
         done error.message
@@ -54,6 +64,7 @@ getArrivalEstimate = (order, done) ->
         flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
         sortedTimes = flattenedTimes.sort (a, b) -> a - b
         line2 = _.map sortedTimes, (time) -> " #{time}min"
+        estimates[routes[order]] = [line1, line2]
         done [line1, line2]
   else
     nextBus.getRouteInfo routes[order], (error, info) ->
@@ -64,6 +75,7 @@ getArrivalEstimate = (order, done) ->
       else
         line1 = info.route + ": " + info.direction
         line2 = _.map info.estimates, (est) -> " #{est}min"
+        estimates[routes[order]] = [line1, line2]
         done [line1, line2]
 
 

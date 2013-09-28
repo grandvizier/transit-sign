@@ -1,0 +1,27 @@
+Readme
+======
+
+This is my own (CoffeeScript) interpretation to the work that pshved did: 
+http://coldattic.info/shvedsky/pro/blogs/a-foo-walks-into-a-bar/posts/98
+I'd recommmend a look at his blog post about what sign to use and other hardware tips. 
+
+Depedencies
+----------
+* Perl
+	libdevice-serialport-perl
+
+* download Device-MiniLED: 
+	http://search.cpan.org/~kschwab/Device-MiniLED/
+* install Device-MiniLED
+        perl Build.PL
+        ./Build
+        ./Build test
+        ./Build install
+
+* npm depedencies:
+	async
+	request
+	underscore
+	xml2js
+	line-by-line
+

@@ -16,71 +16,71 @@ setInterval ( ->
   sleepTime = 1 <= d.getHours() <= 5
 
   if sleepTime
-  	output.printString ["It's late... ", 'Go back to sleep'], () ->
+    output.printString ["It's late... ", 'Go back to sleep'], () ->
   else if commuteTime
-  	getCommuteEstimate (error, estimate) -> 
-  		#console.log estimate
-  		output.printString estimate, () ->
+    getCommuteEstimate (error, estimate) -> 
+      #console.log estimate
+      output.printString estimate, () ->
   else
-  	getArrivalEstimate interval_count, (error, estimate) ->
-  		if error then console.log '   --- error', error 
-  		else 
-  			console.log ' * ', estimate
-  			output.printString estimate, () ->
-  		if interval_count > (routes.length - 2) then interval_count = 0 
-  		else ++interval_count
+    getArrivalEstimate interval_count, (error, estimate) ->
+      if error then console.log '   --- error', error 
+      else 
+        console.log ' * ', estimate
+        output.printString estimate, () ->
+      if interval_count > (routes.length - 2) then interval_count = 0 
+      else ++interval_count
 ), refreshInterval
 
 
 
 routes = [
-	'Fruitvale'
-	'12th St.'
-	'oToCity'
-	'wToCity'
-	'51aToBart'
-	'51aToOakland'
+  'Fruitvale'
+  '12th St.'
+  'oToCity'
+  'wToCity'
+  '51aToBart'
+  '51aToOakland'
 ]
 
 
 getArrivalEstimate = (order, done) ->
-	if order < 2 
-		bart.getCityTrains routes[order], (error, info) ->
-			if info.error
-				done null, [info.station, info.error]
-			else
-				line1 = routes[order] + ' BART'
-				times = (estObj.est for estObj in info.estimates)
-				flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
-				sortedTimes = flattenedTimes.sort (a, b) -> a - b
-				line2 = _.map sortedTimes, (time) -> " #{time}min"
-				done null, [line1, line2]
-	else
-		nextBus.getRouteInfo routes[order], (error, info) ->
-			if info.error
-				done null, ["#{info.route}: #{info.stop} ", info.error]
-			else
-				line1 = info.route + ": " + info.direction
-				line2 = _.map info.estimates, (est) -> " #{est}min"
-				done null, [line1, line2]
+  if order < 2 
+    bart.getCityTrains routes[order], (error, info) ->
+      if info.error
+        done null, [info.station, info.error]
+      else
+        line1 = routes[order] + ' BART'
+        times = (estObj.est for estObj in info.estimates)
+        flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
+        sortedTimes = flattenedTimes.sort (a, b) -> a - b
+        line2 = _.map sortedTimes, (time) -> " #{time}min"
+        done null, [line1, line2]
+  else
+    nextBus.getRouteInfo routes[order], (error, info) ->
+      if info.error
+        done null, ["#{info.route}: #{info.stop} ", info.error]
+      else
+        line1 = info.route + ": " + info.direction
+        line2 = _.map info.estimates, (est) -> " #{est}min"
+        done null, [line1, line2]
 
 
 getCommuteEstimate = (done) ->
-	async.parallel 
-		acOInfo: (next) ->
-			nextBus.getRouteInfo '51aToBart', (error, info) =>
-				next null, info
-		acWInfo: (next) ->
-			nextBus.getRouteInfo 'wToCity', (error, info) =>
-				next null, info
-	, (error, results) ->
-		oInfo = 'O: ' + results.acOInfo.error ? ''
-		wInfo = 'W: ' + results.acWInfo.error ? ''
-		if results.acOInfo.estimates
-			oInfo = 'O: ' + results.acOInfo.estimates
-		if results.acWInfo.estimates
-			wInfo = 'W: ' + results.acWInfo.estimates
-		done null, [oInfo, wInfo]
+  async.parallel 
+    acOInfo: (next) ->
+      nextBus.getRouteInfo '51aToBart', (error, info) =>
+        next null, info
+    acWInfo: (next) ->
+      nextBus.getRouteInfo 'wToCity', (error, info) =>
+        next null, info
+  , (error, results) ->
+    oInfo = 'O: ' + results.acOInfo.error ? ''
+    wInfo = 'W: ' + results.acWInfo.error ? ''
+    if results.acOInfo.estimates
+      oInfo = 'O: ' + results.acOInfo.estimates
+    if results.acWInfo.estimates
+      wInfo = 'W: ' + results.acWInfo.estimates
+    done null, [oInfo, wInfo]
 
 
 

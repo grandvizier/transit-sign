@@ -103,3 +103,12 @@ getCommuteEstimate = (done) ->
 
 
 
+formatTime = () ->
+  d = new Date()
+  hour = d.getHours()
+  suffex = if (hour >= 12) then "pm" else "am"
+  hour = if (hour > 12) then hour - 12 else hour
+  #if 00 then it is 12 am
+  hour = if (hour is "00") then 12 else hour
+  minutes = ("00" + d.getMinutes()).slice -2
+  return "#{hour}:#{minutes} #{suffex}"

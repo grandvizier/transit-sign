@@ -13,7 +13,6 @@ routes = [
   'Fruitvale'
   '12th St.'
   'oToCity'
-  'wToCity'
   '51aToBart'
   '51aToOakland'
 ]
@@ -97,7 +96,7 @@ getArrivalEstimate = (routeArray, order, done) ->
 getCommuteEstimate = (done) ->
   async.parallel 
     acOInfo: (next) ->
-      nextBus.getRouteInfo '51aToBart', (error, info) =>
+      nextBus.getRouteInfo 'oToCity', (error, info) =>
         next null, info
     acWInfo: (next) ->
       nextBus.getRouteInfo 'wToCity', (error, info) =>

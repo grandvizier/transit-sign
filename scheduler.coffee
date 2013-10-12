@@ -17,13 +17,6 @@ routes = [
   '51aToOakland'
 ]
 
-nightWeekendRoutes = [
-  'Fruitvale'
-  '12th St.'
-  '51aToBart'
-  '51aToOakland'
-]
-
 
 # output pre-text to display
 output.printString ' -- Getting first schedule -- ', () ->
@@ -37,14 +30,11 @@ setInterval ( ->
   if sleepTime
     output.printString ["It's late... ", 'Go back to sleep'], () ->
 
-  else if nightWeekend
-    getArrivalEstimate nightWeekendRoutes, interval_count, (estimate) ->
-      # console.log ' * ', estimate
-      output.printString estimate, () ->
-    if interval_count > (nightWeekendRoutes.length - 2) then interval_count = 0
-    else ++interval_count
+  # remove the O bus from the schedule
+  if nightWeekend and routes[interval_count] is 'oToCity'
+    ++interval_count
 
-  else if commuteTime
+  if commuteTime
     getCommuteEstimate (estimate) -> 
       #console.log estimate
       output.printString estimate, () ->

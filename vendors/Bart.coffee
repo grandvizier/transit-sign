@@ -34,4 +34,4 @@ module.exports = class Bart
 				done null, trainInfo
 			else
 				trainInfo.error = true
-				done new Error('no trains a commin'), trainInfo
+				done new Error('404 No Train Found'), trainInfo

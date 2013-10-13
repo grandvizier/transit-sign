@@ -35,5 +35,5 @@ module.exports = class Bus
 			else
 				msg = info?.body?.predictions?[0].message?[0].$?.text ? 'no message'
 				busInfo.error = msg
-				done new Error('no buses a commin: ' + msg), busInfo
+				done new Error('404 No Bus Found: ' + msg), busInfo
 

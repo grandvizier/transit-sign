@@ -82,7 +82,9 @@ getArrivalEstimate = (routeArray, order, done) ->
     time = formatTime()
     forecast.getTempAndRain (error, tempAndRain) ->
       if error then return done "error: #{error}"
-      done ['Alameda', time + "  " + tempAndRain]
+      info = ['Alameda', time + "  " + tempAndRain]
+      estimates[routeArray[order]] = info
+      done info
 
   else
     nextBus.getRouteInfo routeArray[order], (error, info) ->

@@ -69,7 +69,12 @@ getArrivalEstimate = (routeArray, order, done) ->
         times = (estObj.est for estObj in info.estimates)
         flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
         sortedTimes = flattenedTimes.sort (a, b) -> a - b
-        line2 = _.map sortedTimes, (time) -> " #{time}min"
+        if sortedTimes.length is 1
+          line2 =  "#{sortedTimes[0]}min"
+        else if sortedTimes.length is 2
+          line2 = "#{sortedTimes[0]}min & #{sortedTimes[1]}min"
+        else
+          line2 = _.map sortedTimes, (time) -> " #{time}min"
         estimates[routeArray[order]] = [line1, line2]
         done [line1, line2]
 
@@ -89,7 +94,12 @@ getArrivalEstimate = (routeArray, order, done) ->
         done ["#{info.route}: #{info.stop} ", info.error]
       else
         line1 = info.route + ": " + info.direction
-        line2 = _.map info.estimates, (est) -> " #{est}min"
+        if info.estimates.length is 1
+          line2 =  "#{info.estimates[0]}min"
+        else if info.estimates.length is 2
+          line2 = "#{info.estimates[0]}min & #{info.estimates[1]}min"
+        else
+          line2 = _.map info.estimates, (est) -> " #{est}min"
         estimates[routeArray[order]] = [line1, line2]
         done [line1, line2]
 
@@ -123,4 +133,3 @@ formatTime = () ->
   hour = if (hour is "00") then 12 else hour
   minutes = ("00" + d.getMinutes()).slice -2
   return "#{hour}:#{minutes}#{suffex}"
-  

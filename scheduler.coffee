@@ -2,6 +2,7 @@ async = require 'async'
 _ = require 'underscore'
 bart = new (require './vendors/Bart')
 nextBus = new (require './vendors/Bus')
+forecast = new (require './vendors/Weather')
 output = require './lib/signPrinting' 
 
 refreshInterval = 10 * 1000
@@ -15,6 +16,7 @@ routes = [
   'oToCity'
   '51aToBart'
   '51aToOakland'
+  'weather'
 ]
 
 
@@ -52,10 +54,10 @@ setInterval ( ->
 
 getArrivalEstimate = (routeArray, order, done) ->
   if estimates[routeArray[order]]
-    console.log 'saving an api call'
     skippedApiCall = estimates[routeArray[order]]
     estimates[routeArray[order]] = null
     done skippedApiCall
+
   else if order < 2
     bart.getCityTrains routeArray[order], (error, info) ->
       if error
@@ -70,6 +72,15 @@ getArrivalEstimate = (routeArray, order, done) ->
         line2 = _.map sortedTimes, (time) -> " #{time}min"
         estimates[routeArray[order]] = [line1, line2]
         done [line1, line2]
+
+  else if routeArray[order] is 'weather'
+    time = formatTime()
+    forecast.getCurrentTemp (error, temp) ->
+      if error then return done "error: #{error}"
+      forecast.getChanceOfRain false, (error, rain) ->
+        if error then return done "error: #{error}"
+        done ['Alameda', time + " " + temp + " " + rain]
+
   else
     nextBus.getRouteInfo routeArray[order], (error, info) ->
       if error
@@ -111,4 +122,5 @@ formatTime = () ->
   #if 00 then it is 12 am
   hour = if (hour is "00") then 12 else hour
   minutes = ("00" + d.getMinutes()).slice -2
-  return "#{hour}:#{minutes} #{suffex}"
+  return "#{hour}:#{minutes}#{suffex}"
+  

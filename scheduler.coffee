@@ -36,7 +36,7 @@ setInterval ( ->
   if nightWeekend and routes[interval_count] is 'oToCity'
     ++interval_count
 
-  if commuteTime
+  if commuteTime and not nightWeekend
     getCommuteEstimate (estimate) -> 
       #console.log estimate
       output.printString estimate, () ->

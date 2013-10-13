@@ -80,11 +80,9 @@ getArrivalEstimate = (routeArray, order, done) ->
 
   else if routeArray[order] is 'weather'
     time = formatTime()
-    forecast.getCurrentTemp (error, temp) ->
+    forecast.getTempAndRain (error, tempAndRain) ->
       if error then return done "error: #{error}"
-      forecast.getChanceOfRain false, (error, rain) ->
-        if error then return done "error: #{error}"
-        done ['Alameda', time + "  " + temp + "  " + rain]
+      done ['Alameda', time + "  " + tempAndRain]
 
   else
     nextBus.getRouteInfo routeArray[order], (error, info) ->

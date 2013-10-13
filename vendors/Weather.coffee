@@ -24,3 +24,12 @@ module.exports = class Weather
 			#TODO - determine which image to show for which percentage - will also need 'cloud-amount'
 			#if image then getLEDimage()
 			done null, chance + '%'
+
+	getTempAndRain: (done) ->
+		url = baseUrl + alamedaLocation
+		req.curlRequest url, (error, info) =>
+			if error or typeof(info?.dwml?.data?[0]['parameters']?[0].temperature?[0]) isnt 'object'
+				return done new Error 'Temp error'
+			currentTemp = info.dwml.data[0]['parameters'][0].temperature[0].value[0]
+			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]
+			done null, currentTemp + '° ' + chance + '%'

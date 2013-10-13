@@ -4,7 +4,7 @@ module.exports = class Weather
 
 	# http://forecast.weather.gov/MapClick.php?lat=37.77493&lon=-122.41942&FcstType=digitalDWML
 	baseUrl = 'http://forecast.weather.gov/MapClick.php?FcstType=digitalDWML&'
-	alamedaLocation = "lat=37.77288579232436&lon=-122.25929260253906"
+	alamedaLocation = "lat=37.7735&lon=-122.279"
 
 	getCurrentTemp: (done) ->
 		url = baseUrl + alamedaLocation

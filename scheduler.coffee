@@ -10,13 +10,38 @@ interval_count = 0
 
 estimates = []
 
+
+class DisplayObject
+  constructor: (@name, @type, @default_iterations) ->
+  Object.defineProperties @prototype,
+    value:
+      get: -> @val
+      set: (@val) ->
+    i:
+      get: -> @iteration
+      set: (@iteration) ->
+    meta:
+      get: -> @data
+      set: (@data) ->
+
+
+fruitvale = new DisplayObject 'Fruitvale', 'train', 3
+twelveth = new DisplayObject '12th St.', 'train', 3
+O = new DisplayObject 'oToCity', 'bus', 3
+toBart = new DisplayObject '51aToBart', 'bus', 2
+toOakland = new DisplayObject '51aToOakland', 'bus', 2
+time = new DisplayObject 'timeAndWeather', 'weather', 8
+weather = new DisplayObject 'WeatherIcon', 'weather', 8
+
+
 routes = [
-  'Fruitvale'
-  '12th St.'
-  'oToCity'
-  '51aToBart'
-  '51aToOakland'
-  'weather'
+  fruitvale
+  twelveth
+  O
+  toBart
+  toOakland
+  time
+  time
 ]
 
 
@@ -33,7 +58,7 @@ setInterval ( ->
     output.printString ["It's late... ", 'Go back to sleep'], () ->
 
   # remove the O bus from the schedule
-  if nightWeekend and routes[interval_count] is 'oToCity'
+  if nightWeekend and routes[interval_count].name is 'oToCity'
     ++interval_count
 
   if commuteTime and not nightWeekend
@@ -42,7 +67,7 @@ setInterval ( ->
       output.printString estimate, () ->
 
   else
-    getArrivalEstimate routes, interval_count, (estimate) ->
+    getArrivalEstimate routes[interval_count], (estimate) ->
       # console.log ' * ', estimate
       output.printString estimate, () ->
     if interval_count > (routes.length - 2) then interval_count = 0 
@@ -52,20 +77,26 @@ setInterval ( ->
 
 
 
-getArrivalEstimate = (routeArray, order, done) ->
-  if estimates[routeArray[order]]
-    skippedApiCall = estimates[routeArray[order]]
-    estimates[routeArray[order]] = null
-    done skippedApiCall
+getArrivalEstimate = (displayObject, done) ->
+  #skipped api call based on iterations
+  if displayObject.value and displayObject.i
+    displayObject.i--
+    #update the time, but not the weather info
+    if displayObject.type is 'weather'
+      time = formatTime()
+      displayObject.value = ['Alameda', time + "  " + displayObject.meta]
+    return done displayObject.value
+  else
+    displayObject.i = displayObject.default_iterations
 
-  else if order < 2
-    bart.getCityTrains routeArray[order], (error, info) ->
+  if displayObject.type is 'train'
+    bart.getCityTrains displayObject.name, (error, info) ->
       if error
         done error.message
       else if info.error
         done [info.station, info.error]
       else
-        line1 = routeArray[order] + ' BART'
+        line1 = displayObject.name + ' BART'
         times = (estObj.est for estObj in info.estimates)
         flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
         sortedTimes = flattenedTimes.sort (a, b) -> a - b
@@ -75,19 +106,19 @@ getArrivalEstimate = (routeArray, order, done) ->
           line2 = "#{sortedTimes[0]}min & #{sortedTimes[1]}min"
         else
           line2 = _.map sortedTimes, (time) -> " #{time}min"
-        estimates[routeArray[order]] = [line1, line2]
-        done [line1, line2]
+        displayObject.value = [line1, line2]
+        done displayObject.value
 
-  else if routeArray[order] is 'weather'
+  else if displayObject.type is 'weather'
     time = formatTime()
     forecast.getTempAndRain (error, tempAndRain) ->
       if error then return done "error: #{error}"
-      info = ['Alameda', time + "  " + tempAndRain]
-      estimates[routeArray[order]] = info
-      done info
+      displayObject.meta = tempAndRain
+      displayObject.value = ['Alameda', time + "  " + tempAndRain]
+      done displayObject.value
 
-  else
-    nextBus.getRouteInfo routeArray[order], (error, info) ->
+  else if displayObject.type is 'bus'
+    nextBus.getRouteInfo displayObject.name, (error, info) ->
       if error
         done error.message
       else if info.error
@@ -100,8 +131,11 @@ getArrivalEstimate = (routeArray, order, done) ->
           line2 = "#{info.estimates[0]}min & #{info.estimates[1]}min"
         else
           line2 = _.map info.estimates, (est) -> " #{est}min"
-        estimates[routeArray[order]] = [line1, line2]
-        done [line1, line2]
+        displayObject.value = [line1, line2]
+        done displayObject.value
+
+  else
+    done "This wasn't expected: #{displayObject}"
 
 
 getCommuteEstimate = (done) ->

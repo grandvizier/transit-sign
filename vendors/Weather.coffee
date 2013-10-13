@@ -32,4 +32,6 @@ module.exports = class Weather
 				return done new Error 'Temp error'
 			currentTemp = info.dwml.data[0]['parameters'][0].temperature[0].value[0]
 			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]
-			done null, currentTemp + '° ' + chance + '%'
+			currentTemp = currentTemp + '° '
+			chance = if chance > 5 then chance + '%' else ''
+			done null, currentTemp + chance

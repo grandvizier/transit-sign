@@ -42,11 +42,12 @@ routes = [
   toOakland
   time
   time
+  weather
 ]
 
 
 # output pre-text to display
-output.printString ' -- Getting first schedule -- ', () ->
+output.printString ' -- Getting first schedule -- ', null, () ->
 
 setInterval ( ->
   d = new Date()
@@ -55,7 +56,7 @@ setInterval ( ->
   nightWeekend = (d.getDay() is 6) or (d.getDay() is 0) or d.getHours() > 18
 
   if sleepTime
-    output.printString ["It's late... ", 'Go back to sleep'], () ->
+    output.printString ["It's late... ", 'Go back to sleep'], null, () ->
 
   # remove the O bus from the schedule
   if nightWeekend and routes[interval_count].name is 'oToCity'
@@ -64,12 +65,14 @@ setInterval ( ->
   if commuteTime and not nightWeekend
     getCommuteEstimate (estimate) -> 
       #console.log estimate
-      output.printString estimate, () ->
+      output.printString estimate, null, () ->
 
   else
     getArrivalEstimate routes[interval_count], (estimate) ->
-      # console.log ' * ', estimate
-      output.printString estimate, () ->
+      if routes[interval_count].name is 'WeatherIcon'
+        output.printString estimate, routes[interval_count].meta, () ->
+      else
+        output.printString estimate, null, () ->
     if interval_count > (routes.length - 2) then interval_count = 0 
     else ++interval_count
 
@@ -84,7 +87,10 @@ getArrivalEstimate = (displayObject, done) ->
     #update the time, but not the weather info
     if displayObject.type is 'weather'
       time = formatTime()
-      displayObject.value = ['Alameda', time + "  " + displayObject.meta]
+      if displayObject.name is 'timeAndWeather'
+        displayObject.value = ['Alameda', time + "  " + displayObject.meta]
+      else
+        displayObject.value = time
     return done displayObject.value
   else
     displayObject.i = displayObject.default_iterations
@@ -111,11 +117,18 @@ getArrivalEstimate = (displayObject, done) ->
 
   else if displayObject.type is 'weather'
     time = formatTime()
-    forecast.getTempAndRain (error, tempAndRain) ->
-      if error then return done "error: #{error}"
-      displayObject.meta = tempAndRain
-      displayObject.value = ['Alameda', time + "  " + tempAndRain]
-      done displayObject.value
+    if displayObject.name is 'timeAndWeather'
+      forecast.getCurrentTemp (error, temp) ->
+        if error then return done "error: #{error}"
+        displayObject.meta = temp
+        displayObject.value = ['Alameda', time + "  " + temp]
+        done displayObject.value
+    else
+      forecast.getChanceOfRain true, (error, rainIcon) ->
+        if error then return done "error: #{error}"
+        displayObject.meta = rainIcon
+        displayObject.value = time
+        done displayObject.value
 
   else if displayObject.type is 'bus'
     nextBus.getRouteInfo displayObject.name, (error, info) ->

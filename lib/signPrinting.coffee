@@ -4,7 +4,7 @@ childProcess = require "child_process"
 font = new (require './font.coffee')
 
 
-module.exports.printString = (arrayToPrint, done) ->
+module.exports.printString = (arrayToPrint, icon, done) ->
 	pathToApi = "./vendors/LEDapi.pl"
 	_renderText arrayToPrint, (error, strToPrint) =>
 		if error 
@@ -13,7 +13,7 @@ module.exports.printString = (arrayToPrint, done) ->
 			)
 			output.on 'exit', (code) -> done()
 		else
-			output = childProcess.exec("#{pathToApi} '#{strToPrint}'", (error, stdout, stderr) ->
+			output = childProcess.exec("#{pathToApi} '#{strToPrint}' #{icon}", (error, stdout, stderr) ->
 			  #console.log 'FAILED TO PRINT:', error.stack  if error
 			)
 			output.on 'exit', (code) -> done()

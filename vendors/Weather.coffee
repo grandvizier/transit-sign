@@ -22,8 +22,11 @@ module.exports = class Weather
 				return done new Error 'Rain error'
 			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]
 			#TODO - determine which image to show for which percentage - will also need 'cloud-amount'
-			#if image then getLEDimage()
-			done null, chance + '%'
+			iconName = switch
+				when chance > 60 then 'rain'
+				when chance > 20 then 'overcast'
+				else 'sunny'
+			done null, iconName
 
 	getTempAndRain: (done) ->
 		url = baseUrl + alamedaLocation

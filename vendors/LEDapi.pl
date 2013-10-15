@@ -23,7 +23,7 @@ if (length($inarg) > 200) {
 	  data => "$picFromBits",
 	  effect => 'hold',
 	);
-} elsif ($showIcon && $showIcon != 'null') {
+} elsif ($showIcon && $showIcon ne 'null') {
 	@icons = (
 	   "-----------XXX--" . "-----------XXX--" .
 	   "------XXX-X---X-" . "------XXX-X---X-" .

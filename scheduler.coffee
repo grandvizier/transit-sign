@@ -3,7 +3,7 @@ _ = require 'underscore'
 bart = new (require './vendors/Bart')
 nextBus = new (require './vendors/Bus')
 forecast = new (require './vendors/Weather')
-output = require './lib/signPrinting' 
+output = require './lib/signPrinting'
 
 refreshInterval = 10 * 1000
 interval_count = 0
@@ -63,7 +63,7 @@ setInterval ( ->
     ++interval_count
 
   if commuteTime and not nightWeekend
-    getCommuteEstimate (estimate) -> 
+    getCommuteEstimate (estimate) ->
       #console.log estimate
       output.printString estimate, null, () ->
 
@@ -73,7 +73,7 @@ setInterval ( ->
         output.printString estimate, routes[interval_count].meta, () ->
       else
         output.printString estimate, null, () ->
-    if interval_count > (routes.length - 2) then interval_count = 0 
+    if interval_count > (routes.length - 2) then interval_count = 0
     else ++interval_count
 
 ), refreshInterval
@@ -152,7 +152,7 @@ getArrivalEstimate = (displayObject, done) ->
 
 
 getCommuteEstimate = (done) ->
-  async.parallel 
+  async.parallel
     acOInfo: (next) ->
       nextBus.getRouteInfo 'oToCity', (error, info) =>
         next null, info

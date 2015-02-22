@@ -1,20 +1,27 @@
-
 _ = require 'underscore'
+logger = require 'winston'
 childProcess = require "child_process"
 font = new (require './font.coffee')
 
+logger.add logger.transports.File,
+  filename: 'printingLog.log'
+  tailable: true
+  json: false
+  maxsize: 40500
+  maxFiles: 2
 
 module.exports.printString = (arrayToPrint, icon, done) ->
 	pathToApi = "./vendors/LEDapi.pl"
+	logger.info "To Print:", arrayToPrint
 	_renderText arrayToPrint, (error, strToPrint) =>
-		if error 
+		if error
 			output = childProcess.exec("#{pathToApi} '#{error.message}'", (error, stdout, stderr) ->
-			  console.log 'FAILED TO CONVERT AND PRINT:', error.stack  if error
+			  logger.error 'FAILED TO CONVERT AND PRINT:', error.stack  if error
 			)
 			output.on 'exit', (code) -> done()
 		else
 			output = childProcess.exec("#{pathToApi} '#{strToPrint}' #{icon}", (error, stdout, stderr) ->
-			  #console.log 'FAILED TO PRINT:', error.stack  if error
+			  logger.error 'FAILED TO PRINT:', error.stack  if error
 			)
 			output.on 'exit', (code) -> done()
 

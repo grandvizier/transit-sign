@@ -1,4 +1,5 @@
 req = require '../lib/requests'
+_ = require 'underscore'
 
 module.exports = class Weather
 
@@ -11,13 +12,16 @@ module.exports = class Weather
 		req.curlRequest url, (error, info) =>
 			if error or typeof(info?.dwml?.data?[0]['parameters']?[0].temperature?[0]) isnt 'object'
 				return done new Error 'Temp error'
-			currentTemp = info.dwml.data[0]['parameters'][0].temperature[0].value[0]
+			temperatureData = _.find(info.dwml.data[0]['parameters'][0].temperature, (d) ->
+				if d.$.type == 'hourly' then true
+			)
+			currentTemp = temperatureData?.value[0] ? '--'
 			done null, currentTemp + '°'
 
 	getChanceOfRain: (image, done) ->
 		url = baseUrl + alamedaLocation
 		req.curlRequest url, (error, info) =>
-			if error or 
+			if error or
 			typeof(info?.dwml?.data?[0]['parameters']?[0]['probability-of-precipitation']?[0]) isnt 'object'
 				return done new Error 'Rain error'
 			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]

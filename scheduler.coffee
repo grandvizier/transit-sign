@@ -47,7 +47,7 @@ routes = [
 
 
 # output pre-text to display
-output.printString ' -- Getting first schedule -- ', null, () ->
+output.printString ' -- GETTING FIRST SCHEDULE -- ', null, () ->
 
 setInterval ( ->
   d = new Date()
@@ -119,13 +119,13 @@ getArrivalEstimate = (displayObject, done) ->
     time = formatTime()
     if displayObject.name is 'timeAndWeather'
       forecast.getCurrentTemp (error, temp) ->
-        if error then return done "error: #{error}"
+        if error then return done "ERROR: #{error}"
         displayObject.meta = temp
         displayObject.value = ['Alameda', time + "  " + temp]
         done displayObject.value
     else
       forecast.getChanceOfRain true, (error, rainIcon) ->
-        if error then return done "error: #{error}"
+        if error then return done "ERROR: #{error}"
         displayObject.meta = rainIcon
         displayObject.value = time
         done displayObject.value
@@ -148,7 +148,7 @@ getArrivalEstimate = (displayObject, done) ->
         done displayObject.value
 
   else
-    done "This wasn't expected: #{displayObject}"
+    done "THIS WASN'T EXPECTED: #{displayObject}"
 
 
 getCommuteEstimate = (done) ->
@@ -174,7 +174,7 @@ getCommuteEstimate = (done) ->
 formatTime = () ->
   d = new Date()
   hour = d.getHours()
-  suffex = if (hour >= 12) then "pm" else "am"
+  suffex = if (hour >= 12) then "PM" else "AM"
   hour -= 12 if hour > 12
   #if 00 then it is 12 am
   hour = 12 if hour is 0

@@ -27,9 +27,9 @@ module.exports.printString = (arrayToPrint, icon, done) ->
 
 
 module.exports._renderText = _renderText = (textArray, done) ->
-	unless textArray then return done new Error 'no message to send'
-	if typeof(textArray) is 'string' then return done null, textArray + ". "
-	if textArray.length is not 2 then return done new Error 'sent too much to print: ' + textArray
+	unless textArray then return done new Error 'NO MESSAGE TO SEND'
+	if typeof(textArray) is 'string' then return done null, textArray
+	if textArray.length is not 2 then return done new Error 'SENT TOO MUCH TO PRINT: ' + textArray
 
 	line = textArray[0]
 	line_pics =  _.map textArray, (line) ->

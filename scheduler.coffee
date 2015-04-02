@@ -69,7 +69,7 @@ setInterval ( ->
 
   else
     getArrivalEstimate routes[interval_count], (estimate) ->
-      if routes[interval_count].name is 'WeatherIcon'
+      if routes[interval_count].name is 'WeatherIcon' and routes[interval_count].meta
         output.printString estimate, routes[interval_count].meta, () ->
       else
         output.printString estimate, null, () ->

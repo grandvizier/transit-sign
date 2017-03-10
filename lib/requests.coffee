@@ -9,7 +9,12 @@ module.exports.curlRequest = (url, done) ->
 			logger.info "Curl failed:", url
 			return done error
 		if response?.statusCode is 200
-			parseString body, done
+			try
+				parsed = JSON.parse(body)
+				done null, parsed
+			catch e
+				logger.debug "not JSON, trying XML", e
+				parseString body, done
 		else
-			console.log response.statusCode + '  returned: ', body
+			logger.warn response.statusCode + '  returned: ', body
 			done response

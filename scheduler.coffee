@@ -44,7 +44,7 @@ routes = [
   time
   weather
 ]
-
+city = "Berlin"
 
 # output pre-text to display
 output.printString ' -- GETTING FIRST SCHEDULE -- ', null, () ->
@@ -88,7 +88,7 @@ getArrivalEstimate = (displayObject, done) ->
     if displayObject.type is 'weather'
       time = formatTime()
       if displayObject.name is 'timeAndWeather'
-        displayObject.value = ['Alameda', time + "  " + displayObject.meta]
+        displayObject.value = [city, time + "  " + displayObject.meta]
       else
         displayObject.value = time
     return done displayObject.value
@@ -121,7 +121,7 @@ getArrivalEstimate = (displayObject, done) ->
       forecast.getCurrentTemp (error, temp) ->
         if error then return done "ERROR: #{error}"
         displayObject.meta = temp
-        displayObject.value = ['Alameda', time + "  " + temp]
+        displayObject.value = [city, time + "  " + temp]
         done displayObject.value
     else
       forecast.getChanceOfRain true, (error, rainIcon) ->

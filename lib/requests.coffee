@@ -14,7 +14,7 @@ module.exports.curlRequest = (url, done) ->
 				done null, parsed
 			catch e
 				if e instanceof SyntaxError then logger.debug "not JSON, trying XML", e
-				else logger.warn "not JSON, still trying XML", e
+				else return done e
 				parseString body, done
 		else
 			logger.warn response.statusCode + '  returned: ', body

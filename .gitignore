@@ -1,3 +1,6 @@
 
 # log files
 *.log
+
+# private config
+config.json

@@ -1,9 +1,12 @@
 async = require 'async'
 _ = require 'underscore'
-bart = new (require './vendors/Bart')
-nextBus = new (require './vendors/Bus')
 forecast = new (require './vendors/Weather')
 output = require './lib/signPrinting'
+
+try
+  configData = require 'config.json'
+catch error
+  console.log 'A config file is required with a minimum of a weather key. See README.'
 
 refreshInterval = 10 * 1000
 interval_count = 0
@@ -25,22 +28,11 @@ class DisplayObject
       set: (@data) ->
 
 
-fruitvale = new DisplayObject 'Fruitvale', 'train', 3
-twelveth = new DisplayObject '12th St.', 'train', 3
-O = new DisplayObject 'oToCity', 'bus', 3
-toBart = new DisplayObject '51aToBart', 'bus', 2
-toOakland = new DisplayObject '51aToOakland', 'bus', 2
 time = new DisplayObject 'timeAndWeather', 'weather', 8
 weather = new DisplayObject 'WeatherIcon', 'weather', 8
 
 
 routes = [
-  fruitvale
-  twelveth
-  O
-  toBart
-  toOakland
-  time
   time
   weather
 ]
@@ -48,6 +40,7 @@ city = "Berlin"
 
 # output pre-text to display
 output.printString ' -- GETTING FIRST SCHEDULE -- ', null, () ->
+logger = require 'winston'
 
 setInterval ( ->
   d = new Date()
@@ -57,15 +50,6 @@ setInterval ( ->
 
   if sleepTime
     output.printString ["It's late... ", 'Go back to sleep'], null, () ->
-
-  # remove the O bus from the schedule
-  if nightWeekend and routes[interval_count].name is 'oToCity'
-    ++interval_count
-
-  if commuteTime and not nightWeekend
-    getCommuteEstimate (estimate) ->
-      #console.log estimate
-      output.printString estimate, null, () ->
 
   else
     getArrivalEstimate routes[interval_count], (estimate) ->
@@ -95,57 +79,16 @@ getArrivalEstimate = (displayObject, done) ->
   else
     displayObject.i = displayObject.default_iterations
 
-  if displayObject.type is 'train'
-    bart.getCityTrains displayObject.name, (error, info) ->
-      if error
-        done error.message
-      else if info.error
-        done [info.station, info.error]
-      else
-        line1 = displayObject.name + ' BART'
-        times = (estObj.est for estObj in info.estimates)
-        flattenedTimes = _.map (_.flatten times), (time) -> if time is 'Leaving' then 0 else parseInt time
-        sortedTimes = flattenedTimes.sort (a, b) -> a - b
-        if sortedTimes.length is 1
-          line2 =  "#{sortedTimes[0]}min"
-        else if sortedTimes.length is 2
-          line2 = "#{sortedTimes[0]}min & #{sortedTimes[1]}min"
-        else
-          line2 = _.map sortedTimes, (time) -> " #{time}min"
-        displayObject.value = [line1, line2]
-        done displayObject.value
-
-  else if displayObject.type is 'weather'
+  if displayObject.type is 'weather'
     time = formatTime()
-    if displayObject.name is 'timeAndWeather'
-      forecast.getCurrentTemp (error, temp) ->
-        if error then return done "ERROR: #{error}"
-        displayObject.meta = temp
-        displayObject.value = [city, time + "  " + temp]
-        done displayObject.value
-    else
-      forecast.getChanceOfRain true, (error, rainIcon) ->
-        if error then return done "ERROR: #{error}"
-        displayObject.meta = rainIcon
-        displayObject.value = time
-        done displayObject.value
-
-  else if displayObject.type is 'bus'
-    nextBus.getRouteInfo displayObject.name, (error, info) ->
-      if error
-        done error.message
-      else if info.error
-        done ["#{info.route}: #{info.stop} ", info.error]
-      else
-        line1 = info.route + ": " + info.direction
-        if info.estimates.length is 1
-          line2 =  "#{info.estimates[0]}min"
-        else if info.estimates.length is 2
-          line2 = "#{info.estimates[0]}min & #{info.estimates[1]}min"
-        else
-          line2 = _.map info.estimates, (est) -> " #{est}min"
-        displayObject.value = [line1, line2]
-        done displayObject.value
+    forecast.getWeatherInfo (error, weatherData) ->
+      if error then return done "ERROR: #{error}"
+      logger.info weatherData
+      displayObject.meta = weatherData.currTemp
+      displayObject.meta = weatherData.rainIcon
+      displayObject.value = [city, time + "  " + weatherData.feelsLike]
+      displayObject.value = time
+      done displayObject.value
 
   else
     done "THIS WASN'T EXPECTED: #{displayObject}"

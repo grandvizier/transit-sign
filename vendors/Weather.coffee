@@ -23,7 +23,7 @@ module.exports = class Weather
 			if !weatherinfo?.current?.temp_c? then return done new Error 'Parsing Weather data error'
 			allInfo.currTemp	= weatherinfo.current.temp_c + '°'
 			allInfo.feelsLike	= weatherinfo.current.feelslike_c + '°'
-			allInfo.temps		= allInfo.currTemp + " / " + allInfo.feelsLike
+			allInfo.temps		= allInfo.currTemp + " (" + allInfo.feelsLike + ")"
 			allInfo.description = weatherinfo.current.condition.text
 			allInfo.raining		= if weatherinfo.current.precip_mm > 1.2 then true else false
 			allInfo.cloudy		= if weatherinfo.current.cloud > 60 then true else false

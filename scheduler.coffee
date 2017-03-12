@@ -87,9 +87,9 @@ getPrintContent = (displayObject, done) ->
     displayObject.i--
     #update the time, but not the weather info
     if displayObject.name is 'WeatherIcon'
-      displayObject.value = "#{time} #{weatherData.description}"
+      displayObject.value = [time, weatherData.description]
     else
-      displayObject.value = [city, "#{time} #{weatherData.temps}"]
+      displayObject.value = [city, "#{time}  #{weatherData.temps}"]
     return done displayObject.value
   else
     displayObject.i = configData.weather.apiFrequency * minuteInterval / refreshInterval
@@ -100,7 +100,7 @@ getPrintContent = (displayObject, done) ->
       if error then return done "ERROR: #{error}"
       weatherData = freshData
       displayObject.meta = weatherData.rainIcon
-      displayObject.value = [city, "#{time} #{weatherData.temps}"]
+      displayObject.value = [city, "#{time}  #{weatherData.temps}"]
       done displayObject.value
 
   else

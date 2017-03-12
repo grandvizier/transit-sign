@@ -13,7 +13,7 @@ logger.add logger.transports.File,
 module.exports.printString = (arrayToPrint, icon, done) ->
 	pathToApi = "./vendors/LEDapi.pl"
 	logger.info "To Print:", arrayToPrint
-	_renderText arrayToPrint, (error, strToPrint) =>
+	_renderText arrayToPrint, icon, (error, strToPrint) =>
 		if error
 			output = childProcess.exec("#{pathToApi} '#{error.message}'", (error, stdout, stderr) ->
 			  logger.error 'FAILED TO CONVERT AND PRINT:', error.stack  if error
@@ -26,14 +26,17 @@ module.exports.printString = (arrayToPrint, icon, done) ->
 			output.on 'exit', (code) -> done()
 
 
-module.exports._renderText = _renderText = (textArray, done) ->
+module.exports._renderText = _renderText = (textArray, withIcon, done) ->
 	unless textArray then return done new Error 'NO MESSAGE TO SEND'
 	if typeof(textArray) is 'string' then return done null, textArray
 	if textArray.length is not 2 then return done new Error 'SENT TOO MUCH TO PRINT: ' + textArray
+	totalLineSize = 96
+	if withIcon
+		totalLineSize = 80
+
 
 	line = textArray[0]
 	line_pics =  _.map textArray, (line) ->
-		totalLineSize = 96
 		str = line.toString().replace /^\s+|\s+$/g, ""
 		line_width = 0
 		bytes = []

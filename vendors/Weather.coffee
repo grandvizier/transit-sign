@@ -4,41 +4,41 @@ _ = require 'underscore'
 module.exports = class Weather
 
 	# https://www.apixu.com/api-explorer.aspx
-	baseUrl = 'https://api.apixu.com/v1/current.json?key='
-	key = ''
-	cityLocation = "q=52.51832,13.45167"
-	url = baseUrl + key + '&' + cityLocation
+	baseUrl = 'https://api.apixu.com/v1/forecast.json?key='
+	apikey: ''
+	cityLocation: "q=52.52,13.44"
+	days: '1'
 
-	getCurrentTemp: (done) ->
+	getWeatherInfo: (done) ->
+		url = baseUrl + @apikey + '&' + @cityLocation + '&days=' + @days
+		allInfo =
+			'currTemp': null
+			'feelsLike': null
+			'temps': null
+			'description': null
+			'forecast': null
+
 		req.curlRequest url, (error, weatherinfo) =>
-			if error
-				return done new Error error
-			if not weatherinfo.current
-				return done new Error 'Parsing Temp error'
-			done null, weatherinfo.current.temp_c + '°'
+			if error then return done error
+			if !weatherinfo?.current?.temp_c? then return done new Error 'Parsing Weather data error'
+			allInfo.currTemp	= weatherinfo.current.temp_c + '°'
+			allInfo.feelsLike	= weatherinfo.current.feelslike_c + '°'
+			allInfo.temps		= allInfo.currTemp + " / " + allInfo.feelsLike
+			allInfo.description = weatherinfo.current.condition.text
+			allInfo.raining		= if weatherinfo.current.precip_mm > 1.2 then true else false
+			allInfo.cloudy		= if weatherinfo.current.cloud > 60 then true else false
+			allInfo.rainIcon	= @getIcon(allInfo.raining, allInfo.cloudy)
+			allInfo.forecast	= @parseForecast(weatherinfo.forecast.forecastday)
+			done null, allInfo
 
-	getChanceOfRain: (image, done) ->
-		console.log("chance of rain")
-		req.curlRequest url, (error, info) =>
-			if error
-				return done new Error 'Rain error'
-			console.log info.current.cloud
-			console.log info
 
-			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]
-			#TODO - determine which image to show for which percentage - will also need 'cloud-amount'
-			iconName = switch
-				when chance > 60 then 'rain'
-				when chance > 20 then 'overcast'
-				else 'sunny'
-			done null, iconName
+	getIcon: (raining, cloudy) ->
+		iconName = if raining then 'rain'
+		else if cloudy then 'overcast'
+		else 'sunny'
+		return iconName
 
-	getTempAndRain: (done) ->
-		req.curlRequest url, (error, info) =>
-			if error or typeof(info?.dwml?.data?[0]['parameters']?[0].temperature?[0]) isnt 'object'
-				return done new Error 'Temp error'
-			currentTemp = info.dwml.data[0]['parameters'][0].temperature[0].value[0]
-			chance = info.dwml.data[0]['parameters'][0]['probability-of-precipitation'][0].value[0]
-			currentTemp = currentTemp + '° '
-			chance = if chance > 5 then chance + '%' else ''
-			done null, currentTemp + chance
+
+	parseForecast: (forecastdays) ->
+		chance = if chance > 5 then chance + '%' else ''
+		return {}

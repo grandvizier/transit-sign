@@ -1,13 +1,13 @@
+fs = require 'fs'
 async = require 'async'
 _ = require 'underscore'
+logger = require 'winston'
 forecast = new (require './vendors/Weather')
 output = require './lib/signPrinting'
 
-try
-  configData = require 'config.json'
-catch error
-  console.log 'A config file is required with a minimum of a weather key. See README.'
 
+configData = null
+minuteInterval = 60 * 1000
 refreshInterval = 10 * 1000
 interval_count = 0
 
@@ -15,7 +15,7 @@ estimates = []
 
 
 class DisplayObject
-  constructor: (@name, @type, @default_iterations) ->
+  constructor: (@name, @type) ->
   Object.defineProperties @prototype,
     value:
       get: -> @val
@@ -28,90 +28,83 @@ class DisplayObject
       set: (@data) ->
 
 
-time = new DisplayObject 'timeAndWeather', 'weather', 8
-weather = new DisplayObject 'WeatherIcon', 'weather', 8
+updateConfig = () ->
+  fs.readFile 'config.json', (err, data) ->
+    if err?
+      logger.error 'A config file is required with at least a weather key. See README.'
+      throw err
+    configData = JSON.parse(data)
+    forecast.apikey = configData.weather.key
 
 
-routes = [
+time       = new DisplayObject 'timeAndWeather', 'weather'
+prediction = new DisplayObject 'WeatherIcon', 'weather'
+
+
+displays = [
   time
-  weather
+  prediction
 ]
 city = "Berlin"
+bday = null
+weatherData = null
+updateConfig()
+
 
 # output pre-text to display
-output.printString ' -- GETTING FIRST SCHEDULE -- ', null, () ->
-logger = require 'winston'
+output.printString ' -- LOADING UP DATA -- ', null, () ->
+
 
 setInterval ( ->
   d = new Date()
-  commuteTime = d.getHours() is 7 or (d.getHours() is 8 and d.getMinutes() < 30)
   sleepTime = 1 <= d.getHours() <= 5
-  nightWeekend = (d.getDay() is 6) or (d.getDay() is 0) or d.getHours() > 18
+  updateConfig()
 
   if sleepTime
-    output.printString ["It's late... ", 'Go back to sleep'], null, () ->
+    bday = checkBirthdays(d, configData.birthdays)
+    output.printString ["It's late... #{formatTime()}", 'Go back to sleep'], null, () ->
+
+  else if bday?
+      output.printString ["Happy Birthday", bday.name], null, () ->
 
   else
-    getArrivalEstimate routes[interval_count], (estimate) ->
-      if routes[interval_count].name is 'WeatherIcon' and routes[interval_count].meta
-        output.printString estimate, routes[interval_count].meta, () ->
+    getPrintContent displays[interval_count], (content) ->
+      if displays[interval_count].name is 'WeatherIcon' and displays[interval_count].meta
+        output.printString content, displays[interval_count].meta, () ->
       else
-        output.printString estimate, null, () ->
-    if interval_count > (routes.length - 2) then interval_count = 0
+        output.printString content, null, () ->
+    if interval_count > (displays.length - 2) then interval_count = 0
     else ++interval_count
 
 ), refreshInterval
 
 
 
-getArrivalEstimate = (displayObject, done) ->
-  #skipped api call based on iterations
+getPrintContent = (displayObject, done) ->
+  time = formatTime()
+  #skip the api call based on iterations
   if displayObject.value and displayObject.i
     displayObject.i--
     #update the time, but not the weather info
-    if displayObject.type is 'weather'
-      time = formatTime()
-      if displayObject.name is 'timeAndWeather'
-        displayObject.value = [city, time + "  " + displayObject.meta]
-      else
-        displayObject.value = time
+    if displayObject.name is 'WeatherIcon'
+      displayObject.value = "#{time} #{weatherData.description}"
+    else
+      displayObject.value = [city, "#{time} #{weatherData.temps}"]
     return done displayObject.value
   else
-    displayObject.i = displayObject.default_iterations
+    displayObject.i = configData.weather.apiFrequency * minuteInterval / refreshInterval
 
   if displayObject.type is 'weather'
-    time = formatTime()
-    forecast.getWeatherInfo (error, weatherData) ->
+    logger.info "checking weather api", time
+    forecast.getWeatherInfo (error, freshData) ->
       if error then return done "ERROR: #{error}"
-      logger.info weatherData
-      displayObject.meta = weatherData.currTemp
+      weatherData = freshData
       displayObject.meta = weatherData.rainIcon
-      displayObject.value = [city, time + "  " + weatherData.feelsLike]
-      displayObject.value = time
+      displayObject.value = [city, "#{time} #{weatherData.temps}"]
       done displayObject.value
 
   else
     done "THIS WASN'T EXPECTED: #{displayObject}"
-
-
-getCommuteEstimate = (done) ->
-  async.parallel
-    acOInfo: (next) ->
-      nextBus.getRouteInfo 'oToCity', (error, info) =>
-        next null, info
-    acWInfo: (next) ->
-      nextBus.getRouteInfo 'wToCity', (error, info) =>
-        next null, info
-  , (error, results) ->
-    oInfo = 'O: ' + results.acOInfo.error ? ''
-    wInfo = 'W: ' + results.acWInfo.error ? ''
-    if results.acOInfo.estimates
-      oInfo = 'O: ' + results.acOInfo.estimates
-    if results.acWInfo.estimates
-      wInfo = 'W: ' + results.acWInfo.estimates
-    done [oInfo, wInfo]
-
-
 
 
 formatTime = () ->
@@ -123,3 +116,10 @@ formatTime = () ->
   hour = 12 if hour is 0
   minutes = ("00" + d.getMinutes()).slice -2
   return "#{hour}:#{minutes}#{suffex}"
+
+
+checkBirthdays = (currentDate, birthdays) ->
+  (if bd.day is currentDate.getDate() and bd.month is (currentDate.getMonth() + 1)
+    (congrat or congrat = [])
+  else []).push bd for bd in birthdays
+  return congrat?[0]

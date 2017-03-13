@@ -110,12 +110,8 @@ getPrintContent = (displayObject, done) ->
 formatTime = () ->
   d = new Date()
   hour = d.getHours()
-  suffex = if (hour >= 12) then "PM" else "AM"
-  hour -= 12 if hour > 12
-  #if 00 then it is 12 am
-  hour = 12 if hour is 0
   minutes = ("00" + d.getMinutes()).slice -2
-  return "#{hour}:#{minutes}#{suffex}"
+  return "#{hour}:#{minutes}"
 
 
 checkBirthdays = (currentDate, birthdays) ->

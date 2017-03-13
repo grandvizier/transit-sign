@@ -12,7 +12,7 @@ logger.add logger.transports.File,
 
 module.exports.printString = (arrayToPrint, icon, done) ->
 	pathToApi = "./vendors/LEDapi.pl"
-	logger.info "To Print:", arrayToPrint
+	logger.debug "To Print:", arrayToPrint
 	_renderText arrayToPrint, icon, (error, strToPrint) =>
 		if error
 			output = childProcess.exec("#{pathToApi} '#{error.message}'", (error, stdout, stderr) ->

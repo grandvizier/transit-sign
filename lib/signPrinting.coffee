@@ -32,7 +32,7 @@ module.exports._renderText = _renderText = (textArray, withIcon, done) ->
 	if textArray.length is not 2 then return done new Error 'SENT TOO MUCH TO PRINT: ' + textArray
 	totalLineSize = 96
 	if withIcon
-		totalLineSize = 76
+		totalLineSize = 70
 
 
 	line = textArray[0]

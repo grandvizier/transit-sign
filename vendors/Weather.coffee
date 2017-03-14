@@ -34,7 +34,7 @@ module.exports = class Weather
 
 	getIcon: (raining, cloudy) ->
 		iconName = if raining then 'rain'
-		else if cloudy then 'overcast'
+		else if cloudy then 'cloudy'
 		else 'sunny'
 		return iconName
 

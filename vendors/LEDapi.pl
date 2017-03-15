@@ -98,7 +98,7 @@ if ($showIcon && $showIcon ne 'null') {
 	    # a long string isn't as long with an icon
 	    my $picFromBits=$sign->addPix(
 		    height => 16,
-		    width  => 70,
+		    width  => 62,
 		    data   =>  "$inarg"
 		);
 		$sign->addMsg(

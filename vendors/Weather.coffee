@@ -26,14 +26,16 @@ module.exports = class Weather
 			allInfo.temps		= allInfo.currTemp + " (" + allInfo.feelsLike + ")"
 			allInfo.description = weatherinfo.current.condition.text
 			allInfo.raining		= if weatherinfo.current.precip_mm > 1.2 then true else false
-			allInfo.cloudy		= if weatherinfo.current.cloud > 60 then true else false
-			allInfo.rainIcon	= @getIcon(allInfo.raining, allInfo.cloudy)
+			allInfo.cloudy		= if weatherinfo.current.cloud > 35 then true else false
+			allInfo.overcast	= if weatherinfo.current.cloud > 65 then true else false
+			allInfo.rainIcon	= @getIcon(allInfo.raining, allInfo.cloudy, allInfo.overcast)
 			allInfo.forecast	= @parseForecast(weatherinfo.forecast.forecastday)
 			done null, allInfo
 
 
-	getIcon: (raining, cloudy) ->
+	getIcon: (raining, cloudy, overcast) ->
 		iconName = if raining then 'rain'
+		else if overcast then 'overcast'
 		else if cloudy then 'cloudy'
 		else 'sunny'
 		return iconName

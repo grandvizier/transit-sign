@@ -48,6 +48,7 @@ displays = [
 city = "Berlin"
 bday = null
 weatherData = null
+lastCheck = null
 updateConfig()
 
 
@@ -82,29 +83,36 @@ setInterval ( ->
 
 getPrintContent = (displayObject, done) ->
   time = formatTime()
-  #skip the api call based on iterations
-  if displayObject.value and displayObject.i
-    displayObject.i--
-    #update the time, but not the weather info
-    if displayObject.name is 'WeatherIcon'
-      displayObject.value = [time, weatherData.description]
-    else
-      displayObject.value = [city, "#{time}  #{weatherData.temps}"]
-    return done displayObject.value
-  else
-    displayObject.i = configData.weather.apiFrequency * minuteInterval / refreshInterval
 
   if displayObject.type is 'weather'
-    logger.info "checking weather api", time
-    forecast.getWeatherInfo (error, freshData) ->
+    getWeatherData (error, data) ->
       if error then return done "ERROR: #{error}"
-      weatherData = freshData
-      displayObject.meta = weatherData.rainIcon
-      displayObject.value = [city, "#{time}  #{weatherData.temps}"]
-      done displayObject.value
+      displayObject.meta = data.rainIcon
+      if displayObject.name is 'WeatherIcon'
+        displayObject.value = [time, data.description]
+      else
+        displayObject.value = [city, "#{time}  #{data.temps}"]
+      return done displayObject.value
 
   else
     done "THIS WASN'T EXPECTED: #{displayObject}"
+
+
+getWeatherData = (done) ->
+  d = new Date()
+  if !lastCheck?
+      logger.debug 'setting lastCheck time to a time in the past'
+      lastCheck = d.getTime() - (configData.weather.apiFrequency * minuteInterval)
+  if (d.getTime() - lastCheck) >= (configData.weather.apiFrequency * minuteInterval)
+    logger.info "checking weather api"
+    forecast.getWeatherInfo (error, freshData) ->
+      if error then return done "ERROR: #{error}"
+      weatherData = freshData
+      lastCheck = d.getTime()
+      done null, weatherData
+  else
+    logger.debug "reusing weather data"
+    done null, weatherData
 
 
 formatTime = () ->

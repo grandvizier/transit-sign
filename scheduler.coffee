@@ -106,9 +106,9 @@ getWeatherData = (done) ->
   if (d.getTime() - lastCheck) >= (configData.weather.apiFrequency * minuteInterval)
     logger.info "checking weather api"
     forecast.getWeatherInfo (error, freshData) ->
+      lastCheck = d.getTime()  # even if there was an error, don't check again till next interval
       if error then return done "ERROR: #{error}"
       weatherData = freshData
-      lastCheck = d.getTime()
       done null, weatherData
   else
     logger.debug "reusing weather data"
